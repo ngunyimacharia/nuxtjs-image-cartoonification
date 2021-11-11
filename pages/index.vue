@@ -1,7 +1,150 @@
 <template>
-  <Tutorial/>
+  <div class="bg-white">
+    <div class="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <p
+          class="
+            mt-1
+            text-4xl
+            font-extrabold
+            text-gray-900
+            sm:text-5xl sm:tracking-tight
+            lg:text-6xl
+          "
+        >
+          Image cartoonification
+        </p>
+        <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500">
+          This tool will cartoonify your images for you. Upload your image and
+          see it cartoonified for you.
+        </p>
+      </div>
+    </div>
+
+    <div
+      class="
+        bg-white
+        px-4
+        py-5
+        border
+        rounded-lg
+        border-gray-200
+        sm:px-6
+        w-2/3
+        mx-auto
+        text-center
+      "
+    >
+      <a
+        v-if="cloudinaryImage"
+        target="_blank"
+        :href="imageUrl"
+        class="
+          inline-flex
+          items-center
+          px-4
+          py-2
+          border border-transparent
+          text-sm
+          font-medium
+          rounded-md
+          text-indigo-700
+          bg-indigo-100
+          hover:bg-indigo-200
+          focus:outline-none
+          focus:ring-2
+          focus:ring-offset-2
+          focus:ring-indigo-500
+        "
+      >
+        Download
+      </a>
+      <form v-else @submit.prevent="upload">
+        <input
+          class="
+            my-5
+            block
+            w-full
+            border border-gray-100
+            rounded-md
+            shadow-sm
+            py-2
+            px-3
+            focus:outline-none focus:ring-indigo-500 focus:border-indigo-500
+            sm:text-sm
+          "
+          type="file"
+          name="file"
+          @change="handleFile"
+        />
+        <p v-if="uploading" class="text-center text-gray-700">Uploading...</p>
+        <button
+          v-else-if="image"
+          type="submit"
+          class="
+            block
+            mx-auto
+            items-center
+            px-4
+            py-2
+            border border-transparent
+            text-sm
+            font-medium
+            rounded-md
+            shadow-sm
+            text-white
+            bg-indigo-600
+            hover:bg-indigo-700
+            focus:outline-none
+            focus:ring-2
+            focus:ring-offset-2
+            focus:ring-indigo-500
+          "
+        >
+          Convert
+        </button>
+      </form>
+    </div>
+  </div>
 </template>
 
 <script>
-export default {}
+export default {
+  data() {
+    return {
+      uploading: false,
+      image: null,
+      cloudinaryImage: null,
+    };
+  },
+  computed: {
+    imageUrl() {
+      return this.$cloudinary.image.url(this.cloudinaryImage.public_id, {
+        effect: "cartoonify",
+      });
+    },
+  },
+  methods: {
+    async handleFile(e) {
+      this.image = e.target.files[0];
+    },
+    async readData(f) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(f);
+      });
+    },
+    async upload() {
+      this.uploading = true;
+      const imageData = await this.readData(this.image);
+      this.cloudinaryImage = await this.$cloudinary.upload(imageData, {
+        upload_preset: "default-preset",
+        folder: "nuxtjs-image-cartoonification",
+      });
+      console.log(this.cloudinaryImage);
+      this.uploading = false;
+    },
+  },
+};
 </script>
